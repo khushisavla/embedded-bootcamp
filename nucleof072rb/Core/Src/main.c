@@ -110,7 +110,7 @@ int main(void)
 	  //Use GPIO to pull CS to high after data transfer
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
 	  //obtain the last 10 bits
-	  uint16_t raw_value = ((rxData[1] & 0x03) << 8) | rxData[2];
+	  uint32_t raw_value = ((rxData[1] & 0x03) << 8) | rxData[2];
 
 	  // scale according to the desired duty cycle
 	  uint32_t processed_duty_value = 2399 + ((raw_value * (2400)) / 1023);
