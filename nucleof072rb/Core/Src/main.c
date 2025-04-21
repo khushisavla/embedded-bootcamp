@@ -19,6 +19,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -64,6 +66,7 @@ void SystemClock_Config(void);
   */
 int main(void)
 {
+
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -87,7 +90,12 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_SPI1_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
+  uint8_t txData[3] = {0b00000001, 0b10000000, 0b00000000}; // transmission data buffer: element 1: start bit, element 2: channel selected (CH0), element 3: don't cares
+  uint8_t rxData[3] = {0};// Deceleration for the receiving buffer
 
   /* USER CODE END 2 */
 
@@ -95,6 +103,23 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  //Use GPIO to pull CS to low to begin data transfer
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
+	  //Obtain Data
+	  HAL_SPI_TransmitReceive (SPI1, txData, rxData, 3, HAL_MAX_DELAY);
+	  //Use GPIO to pull CS to high after data transfer
+	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
+	  //obtain the last 10 bits
+	  uint16_t raw_value = ((rxData[1] & 0x03) << 8) | rxData[2];
+
+	  // scale according to the desired duty cycle
+	  uint32_t processed_duty_value = 2399 + ((raw_value * (2400)) / 1023);
+
+	  // compare registers
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, processed_duty_value);
+
+	  HAL_Delay(10);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -122,6 +147,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -177,5 +203,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/
