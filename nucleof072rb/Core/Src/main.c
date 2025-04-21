@@ -106,7 +106,7 @@ int main(void)
 	  //Use GPIO to pull CS to low to begin data transfer
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_RESET);
 	  //Obtain Data
-	  HAL_SPI_TransmitReceive (SPI1, txData, rxData, 3, HAL_MAX_DELAY);
+	  HAL_SPI_TransmitReceive (&hspi1, txData, rxData, 3, HAL_MAX_DELAY);
 	  //Use GPIO to pull CS to high after data transfer
 	  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_8, GPIO_PIN_SET);
 	  //obtain the last 10 bits
